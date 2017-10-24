@@ -198,6 +198,13 @@ bool SteeringBehavior::AccumulateForce(Vector2D &RunningTot,
 Vector2D SteeringBehavior::CalculatePrioritized()
 {       
   Vector2D force;
+
+  if (On(playable))
+  {
+	  force = Playable();
+
+	  if (!AccumulateForce(m_vSteeringForce, force)) return m_vSteeringForce;
+  }
   
    if (On(wall_avoidance))
   {
@@ -383,6 +390,10 @@ Vector2D SteeringBehavior::CalculateWeightedSum()
     m_vSteeringForce += Evade(m_pTargetAgent1) * m_dWeightEvade;
   }
 
+  if (On(playable))
+  {
+	  m_vSteeringForce += Playable();
+  }
 
   //these next three can be combined for flocking behavior (wander is
   //also a good behavior to add into this mix)
@@ -1642,5 +1653,21 @@ void SteeringBehavior::RenderAids( )
 
 
 
+//--------------------Playable----------------
+//
+//--------------------------------------------
+Vector2D SteeringBehavior::Playable()
+{
+	Vector2D* direction = new Vector2D();
+
+	if (KEYDOWN(VK_LEFT)) { direction->x--; }
+	if (KEYDOWN(VK_RIGHT)) { direction->x++; }
+	if (KEYDOWN(VK_UP)) { direction->y--; }
+	if (KEYDOWN(VK_DOWN)) { direction->y++; }
+
+	*direction = Vec2DNormalize(*direction);
+
+	return *direction * m_pVehicle->MaxSpeed() - m_pVehicle->Velocity();
+}
 
 

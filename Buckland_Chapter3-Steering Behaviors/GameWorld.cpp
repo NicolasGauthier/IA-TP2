@@ -80,8 +80,8 @@ GameWorld::GameWorld(int cx, int cy):
 #ifdef SHOAL
   m_Vehicles[Prm.NumAgents-1]->Steering()->FlockingOff();
   m_Vehicles[Prm.NumAgents-1]->SetScale(Vector2D(10, 10));
-  m_Vehicles[Prm.NumAgents-1]->Steering()->WanderOn();
-  m_Vehicles[Prm.NumAgents-1]->SetMaxSpeed(70);
+  m_Vehicles[Prm.NumAgents-1]->Steering()->PlayableOn();
+  m_Vehicles[Prm.NumAgents-1]->SetMaxSpeed(200);
 
 
    for (int i=0; i<Prm.NumAgents-1; ++i)
