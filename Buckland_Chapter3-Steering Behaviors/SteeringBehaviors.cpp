@@ -203,6 +203,12 @@ Vector2D SteeringBehavior::CalculatePrioritized()
 {       
   Vector2D force;
 
+  if (On(v_flocking))
+  {
+	  force = VFlocking(m_pVehicle->World()->Agents());
+
+	  if (!AccumulateForce(m_vSteeringForce, force)) return m_vSteeringForce;
+  }
   if (On(playable))
   {
 	  force = Playable();
@@ -381,7 +387,11 @@ Vector2D SteeringBehavior::CalculatePrioritized()
 //  returning
 //------------------------------------------------------------------------
 Vector2D SteeringBehavior::CalculateWeightedSum()
-{        
+{
+	if (On(v_flocking))
+	{
+		m_vSteeringForce += VFlocking(m_pVehicle->World()->Agents());
+	}
   if (On(wall_avoidance))
   {
     m_vSteeringForce += WallAvoidance(m_pVehicle->World()->Walls()) *
