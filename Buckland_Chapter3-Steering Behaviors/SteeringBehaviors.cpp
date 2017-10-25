@@ -1473,7 +1473,10 @@ Vehicle* SteeringBehavior::GetNearestLeader()
 				distance = LeaderList[i]->Pos().Distance(m_pVehicle->Pos());
 			}
 		}
-		return LeaderList[indice];
+		if (distance < 1) {
+			return LeaderList[indice];
+		}
+		return NULL;
 	}
 	
 }
@@ -1491,16 +1494,17 @@ Vector2D SteeringBehavior::RepulsePursuit()
 	if(m_pTargetAgent1 == NULL)
 	{
 		Vehicle* Leader = GetNearestLeader();
-		if(Leader->Steering()->m_pTargetAgent1 == NULL)
-		{
-			m_pTargetAgent1 = Leader;
+		if (Leader != NULL) {
+			if (Leader->Steering()->m_pTargetAgent1 == NULL)
+			{
+				m_pTargetAgent1 = Leader;
+			}
+			else
+			{
+				m_pTargetAgent1 = Leader->Steering()->m_pTargetAgent1;
+			}
+			Leader->Steering()->m_pTargetAgent1 = m_pVehicle;
 		}
-		else
-		{
-			m_pTargetAgent1 = Leader->Steering()->m_pTargetAgent1;
-		}
-		Leader->Steering()->m_pTargetAgent1 = m_pVehicle;
-
 	}
 	Vector2D force;
 	if (m_pTargetAgent1 != NULL) {
