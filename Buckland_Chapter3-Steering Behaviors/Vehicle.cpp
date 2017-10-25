@@ -134,7 +134,7 @@ void Vehicle::Render()
     gdi->BluePen();
   }
 
-  if (Steering()->isInterposeOn())
+  if (Steering()->isPlayableOn())
   {
     gdi->RedPen();
   }
