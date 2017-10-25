@@ -112,7 +112,7 @@ public:
   CellSpacePartition<Vehicle*>*       CellSpace(){return m_pCellSpace;}
   const std::vector<BaseGameEntity*>& Obstacles()const{return m_Obstacles;}
   const std::vector<Vehicle*>&        Agents(){return m_Vehicles;}
-  const std::vector<Vehicle*>&		  Leaders(){return m_Leaders;}
+  std::vector<Vehicle*>&			  Leaders(){return m_Leaders;}
 
 
   //handle WM_COMMAND messages

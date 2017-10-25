@@ -1461,16 +1461,16 @@ Vector2D SteeringBehavior::OffsetPursuit(const Vehicle*  leader,
 Vehicle* SteeringBehavior::GetNearestLeader()
 {
 	//determiner le leader le plus proche
-	vector<Vehicle*> LeaderList = m_pVehicle->World()->Leaders();
+	vector<Vehicle*>& LeaderList = m_pVehicle->World()->Leaders();
 	if (LeaderList.size() > 0) {
 		double distance = LeaderList[0]->Pos().Distance(m_pVehicle->Pos());
 		int indice = 0;
-		for (int i = 0; i < LeaderList.size(); i++)
+		for (auto i = 1u; i < LeaderList.size(); i++)
 		{
-			if (LeaderList[0]->Pos().Distance(m_pVehicle->Pos()) < distance)
+			if (LeaderList[i]->Pos().Distance(m_pVehicle->Pos()) < distance)
 			{
-				indice = 1;
-				distance = LeaderList[0]->Pos().Distance(m_pVehicle->Pos());
+				indice = i;
+				distance = LeaderList[i]->Pos().Distance(m_pVehicle->Pos());
 			}
 		}
 		return LeaderList[indice];

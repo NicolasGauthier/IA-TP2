@@ -77,11 +77,17 @@ GameWorld::GameWorld(int cx, int cy):
 
 #define SHOAL
 #ifdef SHOAL
-  m_Vehicles[0]->Steering()->FlockingOff();
+  m_Vehicles[0]->Steering()->RepulsePursuitOff();
   m_Vehicles[0]->SetScale(Vector2D(10, 10));
   m_Vehicles[0]->Steering()->PlayableOn();
-  m_Vehicles[0]->SetMaxSpeed(200);
+  m_Vehicles[0]->SetMaxSpeed(100);
   m_Leaders.push_back(m_Vehicles[0]);
+
+  m_Vehicles[1]->Steering()->RepulsePursuitOff();
+  m_Vehicles[1]->SetScale(Vector2D(10, 10));
+  m_Vehicles[1]->Steering()->WanderOn();
+  m_Vehicles[1]->SetMaxSpeed(100);
+  m_Leaders.push_back(m_Vehicles[1]);
 
 #endif
  
