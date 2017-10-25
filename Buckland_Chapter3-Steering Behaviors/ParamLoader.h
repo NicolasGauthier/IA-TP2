@@ -71,10 +71,6 @@ private:
     prHide                  = GetNextParameterFloat();
     prArrive                = GetNextParameterFloat();
 
-	prVFlockingRange        = GetNextParameterFloat();
-	prVFlockingPadding      = GetNextParameterFloat();
-	prVFlockingAngle        = GetNextParameterFloat();
-
     MaxTurnRatePerSecond    = Pi;
   }
 
@@ -146,11 +142,7 @@ public:
   double prEvade;
   double prHide;
   double prArrive;
-
-	// VFlocking parameters
-  double prVFlockingRange;
-  double prVFlockingPadding;
-  double prVFlockingAngle;
+  
 };
 
 
