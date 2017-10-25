@@ -73,6 +73,7 @@ private:
     hide               = 0x04000,
     flock              = 0x08000,
     offset_pursuit     = 0x10000,
+	v_flocking         = 0x40000
   };
 
 private:
@@ -231,6 +232,8 @@ private:
   //method attempts to put an obstacle between itself and its opponent
   Vector2D Hide(const Vehicle* hunter, const std::vector<BaseGameEntity*>& obstacles);
 
+  // Returns the steering force used for a flocking in "v"
+  Vector2D VFlocking(const std::vector<Vehicle*> &vehicles);
 
   // -- Group Behaviors -- //
 
@@ -326,6 +329,7 @@ public:
   void HideOn(Vehicle* v){m_iFlags |= hide; m_pTargetAgent1 = v;}
   void OffsetPursuitOn(Vehicle* v1, const Vector2D offset){m_iFlags |= offset_pursuit; m_vOffset = offset; m_pTargetAgent1 = v1;}  
   void FlockingOn(){CohesionOn(); AlignmentOn(); SeparationOn(); WanderOn();}
+  void VFlockingOn() { m_iFlags |= v_flocking; OffsetPursuitOff(); }
 
   void FleeOff()  {if(On(flee))   m_iFlags ^=flee;}
   void SeekOff()  {if(On(seek))   m_iFlags ^=seek;}
@@ -343,6 +347,7 @@ public:
   void HideOff(){if(On(hide)) m_iFlags ^=hide;}
   void OffsetPursuitOff(){if(On(offset_pursuit)) m_iFlags ^=offset_pursuit;}
   void FlockingOff(){CohesionOff(); AlignmentOff(); SeparationOff(); WanderOff();}
+  void VFlockingOff() {if(On(v_flocking)) { m_iFlags ^= v_flocking; OffsetPursuitOff(); }}
 
   bool isFleeOn(){return On(flee);}
   bool isSeekOn(){return On(seek);}
@@ -359,6 +364,7 @@ public:
   bool isInterposeOn(){return On(interpose);}
   bool isHideOn(){return On(hide);}
   bool isOffsetPursuitOn(){return On(offset_pursuit);}
+  bool isVFlockingOn() { return On(v_flocking); }
 
   double DBoxLength()const{return m_dDBoxLength;}
   const std::vector<Vector2D>& GetFeelers()const{return m_Feelers;}

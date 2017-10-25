@@ -12,10 +12,15 @@
 #include "EntityFunctionTemplates.h"
 
 #include <cassert>
+#include <algorithm>
+#include <numeric>
+#include <unordered_map>
+#include <memory>
 
 
 using std::string;
 using std::vector;
+
 
 
 //------------------------- ctor -----------------------------------------
@@ -352,6 +357,13 @@ Vector2D SteeringBehavior::CalculatePrioritized()
     if (!AccumulateForce(m_vSteeringForce, force)) return m_vSteeringForce;
   }
 
+  if (On(v_flocking)) {
+	  force = VFlocking(m_pVehicle->World()->Agents());
+
+	  if (!AccumulateForce(m_vSteeringForce, force)) return m_vSteeringForce;
+  }
+
+
   return m_vSteeringForce;
 }
 
@@ -475,6 +487,10 @@ Vector2D SteeringBehavior::CalculateWeightedSum()
   {
     m_vSteeringForce += FollowPath() * m_dWeightFollowPath;
   }
+
+	if (On(v_flocking)) {
+		m_vSteeringForce += VFlocking(m_pVehicle->World()->Agents());
+	}
 
   m_vSteeringForce.Truncate(m_pVehicle->MaxForce());
  
@@ -901,7 +917,7 @@ Vector2D SteeringBehavior::ObstacleAvoidance(const std::vector<BaseGameEntity*>&
         {
           //now to do a line/circle intersection test. The center of the 
           //circle is represented by (cX, cY). The intersection points are 
-          //given by the formula x = cX +/-sqrt(r^2-cY^2) for y=0. 
+          //given by the formula x = cX +/-sqrt(r^1-cY^2) for y=0. 
           //We only need to look at the smallest positive value of x because
           //that will be the closest point of intersection.
           double cX = LocalPos.x;
@@ -1644,3 +1660,211 @@ void SteeringBehavior::RenderAids( )
 
 
 
+
+
+
+
+
+// +------------+
+// | V FLOCKING |
+// +------------+
+
+// Represents the formations created by vehicles in the vflocking behavior.
+// It helps vehicles to navigate but dosen't move them.
+namespace {
+	enum class enumSide {
+		left,
+		right
+	};
+	struct Formation {
+		Vehicle* leader;
+		std::vector<Vehicle*> left;
+		std::vector<Vehicle*> right;
+	};
+	struct Formations {
+		std::unordered_map<Vehicle*, std::shared_ptr<Formation>> map;
+
+		explicit Formations(GameWorld* world) {
+			for (auto vehicle : world->Agents()) {
+				auto pFormation = std::make_shared<Formation>();
+				pFormation->leader = vehicle;
+				map.insert(std::make_pair(vehicle, std::move(pFormation)));
+			}
+		}
+
+		Vehicle* getLeader(Vehicle* v) {
+			return map[v]->leader;
+		}
+
+		void getPlace(Vehicle* v, enumSide& side, int& shift) {
+			auto& pFormation = map[v];
+
+			bool found = false;
+			auto i = 0u;
+			while (!found && i < pFormation->left.size()) {
+				if (pFormation->left[i] == v)
+					found = true;
+				else ++i;
+			}
+			if (found) {
+				side = enumSide::left;
+				shift = i + 1;
+				return;
+			}
+			i = 0;
+			while (!found && i < pFormation->right.size()) {
+				if (pFormation->right[i] == v)
+					found = true;
+				else ++i;
+			}
+			if (found) {
+				side = enumSide::right;
+				shift = i + 1;
+				return;
+			}
+			throw std::runtime_error{ "Vehicle not found in followers (leader ?)." };
+		}
+
+		bool isInSameFormation(Vehicle* v1, Vehicle* v2) {
+			return &(*map[v1]) == &(*map[v2]);
+		}
+
+		bool isLeaderOfV(Vehicle* target) {
+			auto& pFormation = map[target];
+
+			return pFormation->leader == target
+				&& !pFormation->left.empty()
+				&& !pFormation->right.empty();
+		}
+		
+		Vehicle* follow(Vehicle* follower, Vehicle* target, enumSide& side, int& shift) {
+			auto& pfFollower = map[follower];
+			auto& pfTarget = map[target];
+			auto targetLeft = &pfTarget->left;
+			auto targetRight = &pfTarget->right;
+
+			std::vector<Vehicle*>* pOldQueue = nullptr;
+			std::vector<Vehicle*>* pQueue = nullptr;
+			target = pfTarget->leader;
+
+			// If the follower is alone ...
+			if (pfFollower->left.empty() && pfFollower->right.empty()) {
+
+				// Choose between the target left and right (the closest).
+				const auto dLeft =  (target->Pos() + target->Side()).Distance(follower->Pos());
+				const auto dRight = (target->Pos() - target->Side()).Distance(follower->Pos());
+				side = dLeft < dRight
+						? enumSide::left
+						: enumSide::right;
+			}
+			// Else goes to the side where he have followers.
+			else {
+				side = !pfFollower->left.empty() 
+						? enumSide::left
+						: enumSide::right;
+			}
+
+			// Set the queues.
+			switch (side) {
+			case enumSide::left:
+				pQueue = targetLeft;
+				pOldQueue = &pfFollower->left;
+				break;
+			case enumSide::right:
+				pQueue = targetRight;
+				pOldQueue = &pfFollower->right;
+				break;
+			}
+
+			// Move the follower formation into the target one.
+			map[follower] = pfTarget;
+			pQueue->push_back(follower);
+			shift = pQueue->size();
+			for (auto vehicle : *pOldQueue) {
+				map[vehicle] = pfTarget;
+				pQueue->push_back(vehicle);
+			}
+
+			return target;
+		}
+	};
+
+
+	Formations& get_formations(GameWorld* world) {
+		static Formations instance(world);
+		return instance;
+	}
+}
+
+// Calculate the padding force to make a structure in "v".
+// Separation & alignment forces are already on.
+Vector2D SteeringBehavior::VFlocking(const vector<Vehicle*> &vehicles) {
+
+	auto& formations = get_formations(m_pVehicle->World());
+
+	// Following force.
+	if (m_pTargetAgent1 != nullptr) {
+		m_pVehicle->SetScale({8, 8});
+
+		m_pTargetAgent1 = formations.getLeader(m_pVehicle); // If too far, remove ?
+		enumSide side;
+		int shift;
+		formations.getPlace(m_pVehicle, side, shift);
+
+		const auto angle =
+			side == enumSide::left
+			? pi - Prm.prVFlockingAngle
+			: pi + Prm.prVFlockingAngle;
+
+		m_vOffset = shift * Prm.prVFlockingPadding * Vector2D(cos(angle), sin(angle));
+
+		//return Seek(m_pTargetAgent1->Pos() + m_vOffset);
+		return OffsetPursuit(m_pTargetAgent1, m_vOffset);
+	}
+
+	// No force if the vehicle will not join any other formation.
+	if (formations.isLeaderOfV(m_pVehicle))
+		return Wander();
+
+	auto pos = m_pVehicle->Pos();
+
+	// Get valid neighbors.
+	vector<Vehicle*> targets;
+	std::copy_if(
+		vehicles.cbegin(),
+		vehicles.cend(),
+		std::back_inserter(targets),
+		[this, pos, &formations, range = Prm.prVFlockingRange] (Vehicle* vehicle) {
+		                                                            // It must be :
+		return vehicle != m_pVehicle                                // - Not the same vehicule as the current,
+			&& !formations.isInSameFormation(vehicle, m_pVehicle)   // - Not in the same formation as the current,
+			&& vehicle->Pos().Distance(pos) <= range                // - In the vflocking force range,
+			&& vehicle->Heading().Dot(m_pVehicle->Heading()) > 0    // - In the same orientation as the current,
+			&& (vehicle->Pos()-pos).Dot(m_pVehicle->Heading()) < 0; // - In front of the current. 
+	});
+
+	// No force if there is no valid targets.
+	if (targets.empty())
+		return Wander();
+
+	// Get the closest neighbor.
+	const auto closest = std::accumulate(
+		targets.begin() + 1,
+		targets.end(),
+		*targets.begin(),
+		[pos] (Vehicle* v1, Vehicle* v2) {
+
+		const auto d1 = v1->Pos().Distance(pos);
+		const auto d2 = v2->Pos().Distance(pos);
+		return d1 < d2 ? v1 : v2;
+	});
+
+	enumSide side;
+	int shift;
+	m_pTargetAgent1 = formations.follow(m_pVehicle, closest, side, shift);
+
+	WanderOff();
+
+	return Seek(m_pTargetAgent1->Pos());
+	return OffsetPursuit(m_pTargetAgent1, m_vOffset);
+}
