@@ -66,15 +66,16 @@ GameWorld::GameWorld(int cx, int cy):
                                     Prm.MaxSpeed,             //max velocity
                                     Prm.MaxTurnRatePerSecond, //max turn rate
                                     Prm.VehicleScale);        //scale
-
-    pVehicle->Steering()->RepulsePursuitOn();
+	
+	pVehicle->Steering()->VFlockingOn();
+    // pVehicle->Steering()->RepulsePursuitOn();
 
     m_Vehicles.push_back(pVehicle);
 
     //add it to the cell subdivision
     m_pCellSpace->AddEntity(pVehicle);
   }
-
+  /*
 #define SHOAL
 #ifdef SHOAL
   m_Vehicles[0]->Steering()->RepulsePursuitOff();
@@ -90,6 +91,7 @@ GameWorld::GameWorld(int cx, int cy):
   m_Leaders.push_back(m_Vehicles[1]);
 
 #endif
+  */
  
   //create any obstacles or walls
   //CreateObstacles();
