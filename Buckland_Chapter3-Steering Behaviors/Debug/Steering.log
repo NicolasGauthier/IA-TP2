@@ -1,3 +1,0 @@
-﻿GameWorld.obj : warning LNK4075: ' /EDITANDCONTINUE' ignoré à cause de la spécification '/SAFESEH'
-  Steering.vcxproj -> D:\Nicolas Gauthier\Cloud\Google Drive\Études\UQAC\1er Trimestre\8IAR125 - Intelligence artificielle pour le jeu vidéo\tp2\VS2010\Buckland_Chapter3-Steering Behaviors\.\Debug\Steering.exe
-  Steering.vcxproj -> .\Debug/Steering.pdb (Full PDB)

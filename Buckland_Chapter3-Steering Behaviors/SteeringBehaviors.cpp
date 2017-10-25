@@ -205,6 +205,13 @@ Vector2D SteeringBehavior::CalculatePrioritized()
 
 	  if (!AccumulateForce(m_vSteeringForce, force)) return m_vSteeringForce;
   }
+
+  if (On(repulsepursuit))
+  {
+	  force = RepulsePursuit();
+
+	  if (!AccumulateForce(m_vSteeringForce, force)) return m_vSteeringForce;
+  }
   
    if (On(wall_avoidance))
   {
@@ -393,6 +400,11 @@ Vector2D SteeringBehavior::CalculateWeightedSum()
   if (On(playable))
   {
 	  m_vSteeringForce += Playable();
+  }
+
+  if(On(repulsepursuit))
+  {
+	  m_vSteeringForce += RepulsePursuit();
   }
 
   //these next three can be combined for flocking behavior (wander is
@@ -1446,7 +1458,58 @@ Vector2D SteeringBehavior::OffsetPursuit(const Vehicle*  leader,
   return Arrive(WorldOffsetPos + leader->Velocity() * LookAheadTime, fast);
 }
 
+Vehicle* SteeringBehavior::GetNearestLeader()
+{
+	//determiner le leader le plus proche
+	vector<Vehicle*> LeaderList = m_pVehicle->World()->Leaders();
+	if (LeaderList.size() > 0) {
+		double distance = LeaderList[0]->Pos().Distance(m_pVehicle->Pos());
+		int indice = 0;
+		for (int i = 0; i < LeaderList.size(); i++)
+		{
+			if (LeaderList[0]->Pos().Distance(m_pVehicle->Pos()) < distance)
+			{
+				indice = 1;
+				distance = LeaderList[0]->Pos().Distance(m_pVehicle->Pos());
+			}
+		}
+		return LeaderList[indice];
+	}
+	
+}
 
+Vector2D SteeringBehavior::Repulse(Vehicle* target)
+{
+	Vector2D direction = m_pVehicle->Pos() - target->Pos();
+	double distance = m_pVehicle->Pos().Distance(target->Pos());
+	direction.Normalize();
+	return direction * (m_pVehicle->MaxForce() / distance);
+}
+
+Vector2D SteeringBehavior::RepulsePursuit()
+{
+	if(m_pTargetAgent1 == NULL)
+	{
+		Vehicle* Leader = GetNearestLeader();
+		if(Leader->Steering()->m_pTargetAgent1 == NULL)
+		{
+			m_pTargetAgent1 = Leader;
+		}
+		else
+		{
+			m_pTargetAgent1 = Leader->Steering()->m_pTargetAgent1;
+		}
+		Leader->Steering()->m_pTargetAgent1 = m_pVehicle;
+
+	}
+	Vector2D force;
+	if (m_pTargetAgent1 != NULL) {
+		force = Arrive(m_pTargetAgent1->Pos(), Deceleration(normal)) + Repulse(m_pTargetAgent1);
+		force.Truncate(m_pVehicle->MaxForce());
+	}
+
+	return force;
+}
 
 //for receiving keyboard input from user
 #define KEYDOWN(vk_code) ((GetAsyncKeyState(vk_code) & 0x8000) ? 1 : 0)
