@@ -73,7 +73,9 @@ private:
     hide               = 0x04000,
     flock              = 0x08000,
     offset_pursuit     = 0x10000,
-	v_flocking         = 0x40000
+	repulsepursuit     = 0x20000,
+	v_flocking         = 0x40000,
+	playable		   = 0x80000,
   };
 
 private:
@@ -205,6 +207,12 @@ private:
   //from the target vehicle
   Vector2D OffsetPursuit(const Vehicle* agent, const Vector2D offset);
 
+  Vehicle * GetNearestLeader();
+
+  Vector2D Repulse(Vehicle * target);
+
+  Vector2D RepulsePursuit();
+
   //this behavior attempts to evade a pursuer
   Vector2D Evade(const Vehicle* agent);
 
@@ -234,6 +242,9 @@ private:
 
   // Returns the steering force used for a flocking in "v"
   Vector2D VFlocking(const std::vector<Vehicle*> &vehicles);
+
+  //set the vehicle controllable by the user with the arrow keys
+  Vector2D Playable();
 
   // -- Group Behaviors -- //
 
@@ -293,6 +304,7 @@ public:
   //calculated
   void      RenderAids();
 
+
   void      SetTarget(const Vector2D t){m_vTarget = t;}
 
   void      SetTargetAgent1(Vehicle* Agent){m_pTargetAgent1 = Agent;}
@@ -327,9 +339,11 @@ public:
   void FollowPathOn(){m_iFlags |= follow_path;}
   void InterposeOn(Vehicle* v1, Vehicle* v2){m_iFlags |= interpose; m_pTargetAgent1 = v1; m_pTargetAgent2 = v2;}
   void HideOn(Vehicle* v){m_iFlags |= hide; m_pTargetAgent1 = v;}
-  void OffsetPursuitOn(Vehicle* v1, const Vector2D offset){m_iFlags |= offset_pursuit; m_vOffset = offset; m_pTargetAgent1 = v1;}  
+  void OffsetPursuitOn(Vehicle* v1, const Vector2D offset){m_iFlags |= offset_pursuit; m_vOffset = offset; m_pTargetAgent1 = v1;}
+  void PlayableOn() { m_iFlags = playable;} //on veut que le joueur controle pleinement l'agent
   void FlockingOn(){CohesionOn(); AlignmentOn(); SeparationOn(); WanderOn();}
   void VFlockingOn() { m_iFlags |= v_flocking; OffsetPursuitOff(); }
+  void RepulsePursuitOn() { m_iFlags = repulsepursuit; }
 
   void FleeOff()  {if(On(flee))   m_iFlags ^=flee;}
   void SeekOff()  {if(On(seek))   m_iFlags ^=seek;}
@@ -346,8 +360,10 @@ public:
   void InterposeOff(){if(On(interpose)) m_iFlags ^=interpose;}
   void HideOff(){if(On(hide)) m_iFlags ^=hide;}
   void OffsetPursuitOff(){if(On(offset_pursuit)) m_iFlags ^=offset_pursuit;}
+  void PlayableOff() { if(On(playable)) m_iFlags ^=playable;}
   void FlockingOff(){CohesionOff(); AlignmentOff(); SeparationOff(); WanderOff();}
   void VFlockingOff() {if(On(v_flocking)) { m_iFlags ^= v_flocking; OffsetPursuitOff(); }}
+  void RepulsePursuitOff(){if(On(repulsepursuit)) m_iFlags ^=repulsepursuit;}
 
   bool isFleeOn(){return On(flee);}
   bool isSeekOn(){return On(seek);}
@@ -365,6 +381,8 @@ public:
   bool isHideOn(){return On(hide);}
   bool isOffsetPursuitOn(){return On(offset_pursuit);}
   bool isVFlockingOn() { return On(v_flocking); }
+  bool isPlayableOn() { return On(playable); }
+  bool isRepulsePursuit(){return On(repulsepursuit);}
 
   double DBoxLength()const{return m_dDBoxLength;}
   const std::vector<Vector2D>& GetFeelers()const{return m_Feelers;}

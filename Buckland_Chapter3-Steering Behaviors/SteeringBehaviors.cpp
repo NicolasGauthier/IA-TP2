@@ -203,6 +203,20 @@ bool SteeringBehavior::AccumulateForce(Vector2D &RunningTot,
 Vector2D SteeringBehavior::CalculatePrioritized()
 {       
   Vector2D force;
+
+  if (On(playable))
+  {
+	  force = Playable();
+
+	  if (!AccumulateForce(m_vSteeringForce, force)) return m_vSteeringForce;
+  }
+
+  if (On(repulsepursuit))
+  {
+	  force = RepulsePursuit();
+
+	  if (!AccumulateForce(m_vSteeringForce, force)) return m_vSteeringForce;
+  }
   
    if (On(wall_avoidance))
   {
@@ -395,6 +409,15 @@ Vector2D SteeringBehavior::CalculateWeightedSum()
     m_vSteeringForce += Evade(m_pTargetAgent1) * m_dWeightEvade;
   }
 
+  if (On(playable))
+  {
+	  m_vSteeringForce += Playable();
+  }
+
+  if(On(repulsepursuit))
+  {
+	  m_vSteeringForce += RepulsePursuit();
+  }
 
   //these next three can be combined for flocking behavior (wander is
   //also a good behavior to add into this mix)
@@ -1451,7 +1474,62 @@ Vector2D SteeringBehavior::OffsetPursuit(const Vehicle*  leader,
   return Arrive(WorldOffsetPos + leader->Velocity() * LookAheadTime, fast);
 }
 
+Vehicle* SteeringBehavior::GetNearestLeader()
+{
+	//determiner le leader le plus proche
+	vector<Vehicle*>& LeaderList = m_pVehicle->World()->Leaders();
+	if (LeaderList.size() > 0) {
+		double distance = LeaderList[0]->Pos().Distance(m_pVehicle->Pos());
+		int indice = 0;
+		for (auto i = 1u; i < LeaderList.size(); i++)
+		{
+			if (LeaderList[i]->Pos().Distance(m_pVehicle->Pos()) < distance)
+			{
+				indice = i;
+				distance = LeaderList[i]->Pos().Distance(m_pVehicle->Pos());
+			}
+		}
+		if (distance < 1) {
+			return LeaderList[indice];
+		}
+		return NULL;
+	}
+	
+}
 
+Vector2D SteeringBehavior::Repulse(Vehicle* target)
+{
+	Vector2D direction = m_pVehicle->Pos() - target->Pos();
+	double distance = m_pVehicle->Pos().Distance(target->Pos());
+	direction.Normalize();
+	return direction * (m_pVehicle->MaxForce() / distance);
+}
+
+Vector2D SteeringBehavior::RepulsePursuit()
+{
+	if(m_pTargetAgent1 == NULL)
+	{
+		Vehicle* Leader = GetNearestLeader();
+		if (Leader != NULL) {
+			if (Leader->Steering()->m_pTargetAgent1 == NULL)
+			{
+				m_pTargetAgent1 = Leader;
+			}
+			else
+			{
+				m_pTargetAgent1 = Leader->Steering()->m_pTargetAgent1;
+			}
+			Leader->Steering()->m_pTargetAgent1 = m_pVehicle;
+		}
+	}
+	Vector2D force;
+	if (m_pTargetAgent1 != NULL) {
+		force = Arrive(m_pTargetAgent1->Pos(), Deceleration(normal)) + Repulse(m_pTargetAgent1);
+		force.Truncate(m_pVehicle->MaxForce());
+	}
+
+	return force;
+}
 
 //for receiving keyboard input from user
 #define KEYDOWN(vk_code) ((GetAsyncKeyState(vk_code) & 0x8000) ? 1 : 0)
@@ -1658,6 +1736,22 @@ void SteeringBehavior::RenderAids( )
 
 
 
+//--------------------Playable----------------
+//
+//--------------------------------------------
+Vector2D SteeringBehavior::Playable()
+{
+	Vector2D* direction = new Vector2D();
+
+	if (KEYDOWN(VK_LEFT)) { direction->x--; }
+	if (KEYDOWN(VK_RIGHT)) { direction->x++; }
+	if (KEYDOWN(VK_UP)) { direction->y--; }
+	if (KEYDOWN(VK_DOWN)) { direction->y++; }
+
+	*direction = Vec2DNormalize(*direction);
+
+	return *direction * m_pVehicle->MaxSpeed() - m_pVehicle->Velocity();
+}
 
 
 
@@ -1804,8 +1898,6 @@ Vector2D SteeringBehavior::VFlocking(const vector<Vehicle*> &vehicles) {
 
 	// Following force.
 	if (m_pTargetAgent1 != nullptr) {
-		m_pVehicle->SetScale({8, 8});
-
 		m_pTargetAgent1 = formations.getLeader(m_pVehicle); // If too far, remove ?
 		enumSide side;
 		int shift;

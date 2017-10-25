@@ -21,6 +21,7 @@
 #include "BaseGameEntity.h"
 #include "EntityFunctionTemplates.h"
 #include "vehicle.h"
+#include <set>
 
 
 class Obstacle;
@@ -37,6 +38,8 @@ private:
 
   //a container of all the moving entities
   std::vector<Vehicle*>         m_Vehicles;
+
+  std::vector<Vehicle*>			m_Leaders;
 
   //any obstacles
   std::vector<BaseGameEntity*>  m_Obstacles;
@@ -109,6 +112,7 @@ public:
   CellSpacePartition<Vehicle*>*       CellSpace(){return m_pCellSpace;}
   const std::vector<BaseGameEntity*>& Obstacles()const{return m_Obstacles;}
   const std::vector<Vehicle*>&        Agents(){return m_Vehicles;}
+  std::vector<Vehicle*>&			  Leaders(){return m_Leaders;}
 
 
   //handle WM_COMMAND messages
