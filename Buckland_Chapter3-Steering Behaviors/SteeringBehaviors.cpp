@@ -1487,7 +1487,7 @@ Vehicle* SteeringBehavior::GetNearestLeader()
 				distance = LeaderList[i]->Pos().Distance(m_pVehicle->Pos());
 			}
 		}
-		if (distance < 30) {
+		if (distance < 60) {
 			return LeaderList[indice];
 		}
 		return NULL;
