@@ -89,17 +89,20 @@ void GameWorld::SetupRepulsePursuit()
 		v->SetMaxSpeed(Prm.MaxSpeed);
 		v->Steering()->SetTargetAgent1(NULL);
 		v->Steering()->SetTargetAgent2(NULL);
+		v->setColor(gdi->blue);
 		v->SetVelocity(Vector2D(0, 0));
 	}
 	m_Vehicles[0]->Steering()->RepulsePursuitOff();
 	m_Vehicles[0]->SetScale(Vector2D(10, 10));
 	m_Vehicles[0]->Steering()->PlayableOn();
+	m_Vehicles[0]->setColor(gdi->red);
 	m_Vehicles[0]->SetMaxSpeed(100);
 	m_Leaders.push_back(m_Vehicles[0]);
 
 	m_Vehicles[1]->Steering()->RepulsePursuitOff();
 	m_Vehicles[1]->SetScale(Vector2D(10, 10));
 	m_Vehicles[1]->Steering()->WanderOn();
+	m_Vehicles[1]->setColor(gdi->green);
 	m_Vehicles[1]->SetMaxSpeed(100);
 	m_Leaders.push_back(m_Vehicles[1]);
 }
@@ -117,6 +120,7 @@ void GameWorld::SetupFlockingV()
 		m_Leaders.clear();
 		v->Steering()->SetTargetAgent1(NULL);
 		v->Steering()->SetTargetAgent2(NULL);
+		v->setColor(gdi->blue);
 		v->SetVelocity(Vector2D(0, 0));
 	}
 }

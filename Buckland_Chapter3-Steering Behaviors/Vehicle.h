@@ -52,6 +52,9 @@ private:
   //steering behaviors make use of this - see Wander)
   double                m_dTimeElapsed;
 
+  //color
+  int					color;
+
 
   //buffer for the vehicle shape
   std::vector<Vector2D> m_vecVehicleVB;
@@ -94,6 +97,7 @@ public:
   bool        isSmoothingOn()const{return m_bSmoothingOn;}
   void        SmoothingOn(){m_bSmoothingOn = true;}
   void        SmoothingOff(){m_bSmoothingOn = false;}
+  void		  setColor(int color) { this->color = color; }
   void        ToggleSmoothing(){m_bSmoothingOn = !m_bSmoothingOn;}
   
   double       TimeElapsed()const{return m_dTimeElapsed;}

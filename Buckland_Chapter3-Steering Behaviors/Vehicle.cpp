@@ -43,7 +43,9 @@ Vehicle::Vehicle(GameWorld* world,
 
   //set up the smoother
   m_pHeadingSmoother = new Smoother<Vector2D>(Prm.NumSamplesForSmoothing, Vector2D(0.0, 0.0)); 
-  
+
+  //color (default blue)
+  int color = gdi->blue;
  
 }
 
@@ -131,17 +133,7 @@ void Vehicle::Render()
 
   else
   {
-    gdi->BluePen();
-  }
-
-  if (Steering()->isPlayableOn())
-  {
-    gdi->RedPen();
-  }
-
-  if (Steering()->isHideOn())
-  {
-    gdi->GreenPen();
+	  gdi->SetPenColor(this->color);
   }
 
   if (isSmoothingOn())
@@ -170,6 +162,7 @@ void Vehicle::Render()
   {
     Steering()->RenderAids();
   }
+
 }
 
 
