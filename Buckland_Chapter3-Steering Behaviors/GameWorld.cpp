@@ -89,6 +89,7 @@ void GameWorld::SetupRepulsePursuit()
 		v->SetMaxSpeed(Prm.MaxSpeed);
 		v->Steering()->SetTargetAgent1(NULL);
 		v->Steering()->SetTargetAgent2(NULL);
+		v->SetVelocity(Vector2D(0, 0));
 	}
 	m_Vehicles[0]->Steering()->RepulsePursuitOff();
 	m_Vehicles[0]->SetScale(Vector2D(10, 10));
@@ -114,6 +115,7 @@ void GameWorld::SetupFlockingV()
 		m_Leaders.clear();
 		v->Steering()->SetTargetAgent1(NULL);
 		v->Steering()->SetTargetAgent2(NULL);
+		v->SetVelocity(Vector2D(0, 0));
 	}
 }
 
