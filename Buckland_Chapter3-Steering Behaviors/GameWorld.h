@@ -89,6 +89,10 @@ public:
   
   GameWorld(int cx, int cy);
 
+  void SetupRepulsePursuit();
+
+  void SetupFlockingV();
+
   ~GameWorld();
 
   void  Update(double time_elapsed);

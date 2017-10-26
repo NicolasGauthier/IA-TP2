@@ -66,36 +66,55 @@ GameWorld::GameWorld(int cx, int cy):
                                     Prm.MaxSpeed,             //max velocity
                                     Prm.MaxTurnRatePerSecond, //max turn rate
                                     Prm.VehicleScale);        //scale
-	
-	pVehicle->Steering()->VFlockingOn();
-    // pVehicle->Steering()->RepulsePursuitOn();
 
     m_Vehicles.push_back(pVehicle);
 
     //add it to the cell subdivision
     m_pCellSpace->AddEntity(pVehicle);
   }
-  /*
-#define SHOAL
-#ifdef SHOAL
-  m_Vehicles[0]->Steering()->RepulsePursuitOff();
-  m_Vehicles[0]->SetScale(Vector2D(10, 10));
-  m_Vehicles[0]->Steering()->PlayableOn();
-  m_Vehicles[0]->SetMaxSpeed(100);
-  m_Leaders.push_back(m_Vehicles[0]);
-
-  m_Vehicles[1]->Steering()->RepulsePursuitOff();
-  m_Vehicles[1]->SetScale(Vector2D(10, 10));
-  m_Vehicles[1]->Steering()->WanderOn();
-  m_Vehicles[1]->SetMaxSpeed(100);
-  m_Leaders.push_back(m_Vehicles[1]);
-
-#endif
-  */
+  SetupRepulsePursuit();
+  
  
   //create any obstacles or walls
   //CreateObstacles();
   //CreateWalls();
+}
+
+void GameWorld::SetupRepulsePursuit()
+{
+	for (Vehicle* v : m_Vehicles)
+	{
+		v->Steering()->VFlockingOff();
+		v->Steering()->RepulsePursuitOn();
+		v->SetMaxSpeed(Prm.MaxSpeed);
+		v->Steering()->SetTargetAgent1(NULL);
+		v->Steering()->SetTargetAgent2(NULL);
+	}
+	m_Vehicles[0]->Steering()->RepulsePursuitOff();
+	m_Vehicles[0]->SetScale(Vector2D(10, 10));
+	m_Vehicles[0]->Steering()->PlayableOn();
+	m_Vehicles[0]->SetMaxSpeed(100);
+	m_Leaders.push_back(m_Vehicles[0]);
+
+	m_Vehicles[1]->Steering()->RepulsePursuitOff();
+	m_Vehicles[1]->SetScale(Vector2D(10, 10));
+	m_Vehicles[1]->Steering()->WanderOn();
+	m_Vehicles[1]->SetMaxSpeed(100);
+	m_Leaders.push_back(m_Vehicles[1]);
+}
+
+void GameWorld::SetupFlockingV()
+{
+	for(Vehicle* v : m_Vehicles)
+	{
+		v->Steering()->RepulsePursuitOff();
+		v->SetScale(Vector2D(Prm.VehicleScale, Prm.VehicleScale));
+		v->Steering()->VFlockingOn();
+		v->SetMaxSpeed(Prm.MaxSpeed);
+		m_Leaders.clear();
+		v->Steering()->SetTargetAgent1(NULL);
+		v->Steering()->SetTargetAgent2(NULL);
+	}
 }
 
 
@@ -509,6 +528,18 @@ void GameWorld::HandleMenuItems(WPARAM wParam, HWND hwnd)
       }
 
       break;
+		
+	  case ID_REPULSE_PURSUIT:
+		  SetupRepulsePursuit();
+		  ChangeMenuState(hwnd, ID_REPULSE_PURSUIT, MFS_CHECKED);
+		  ChangeMenuState(hwnd, ID_FLOCKING_V, MFS_UNCHECKED);
+	  break;
+	  
+	  case ID_FLOCKING_V:
+		  SetupFlockingV();
+		  ChangeMenuState(hwnd, ID_REPULSE_PURSUIT, MFS_UNCHECKED);
+		  ChangeMenuState(hwnd, ID_FLOCKING_V, MFS_CHECKED);
+	  break;
       
   }//end switch
 }
