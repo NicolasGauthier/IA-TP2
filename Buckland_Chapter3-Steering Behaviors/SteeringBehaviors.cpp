@@ -1522,9 +1522,18 @@ Vector2D SteeringBehavior::RepulsePursuit()
 	}
 	Vector2D force;
 	if (m_pTargetAgent1 != NULL) {
+		if (m_pVehicle->Steering()->isWanderOn()) {
+			m_pVehicle->Steering()->WanderOff();
+		}
 		m_pVehicle->setColor(m_pTargetAgent1->getColor());
 		force = Arrive(m_pTargetAgent1->Pos(), Deceleration(normal)) + Repulse(m_pTargetAgent1);
 		force.Truncate(m_pVehicle->MaxForce());
+	}
+	else
+	{
+		if (!m_pVehicle->Steering()->isWanderOn()) {
+			m_pVehicle->Steering()->WanderOn();
+		}
 	}
 
 	return force;
@@ -1910,7 +1919,14 @@ Vector2D SteeringBehavior::VFlocking(const vector<Vehicle*> &vehicles) {
 
 	// No force if the vehicle will not join any other formation.
 	if (formations.isLeaderOfV(m_pVehicle))
+	{
+		m_pVehicle->SetMaxSpeed(Prm.MaxSpeed / 2);
 		return Wander();
+	}
+	else
+	{
+		m_pVehicle->SetMaxSpeed(Prm.MaxSpeed);
+	}
 
 	auto pos = m_pVehicle->Pos();
 

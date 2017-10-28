@@ -113,10 +113,9 @@ void GameWorld::SetupFlockingV()
 	{
 		v->Steering()->RepulsePursuitOff();
 		v->Steering()->PlayableOff();
-		v->Steering()->WanderOff();
+		v->Steering()->WanderOn();
 		v->SetScale(Vector2D(Prm.VehicleScale, Prm.VehicleScale));
 		v->Steering()->VFlockingOn();
-		v->SetMaxSpeed(Prm.MaxSpeed);
 		m_Leaders.clear();
 		v->Steering()->SetTargetAgent1(NULL);
 		v->Steering()->SetTargetAgent2(NULL);
