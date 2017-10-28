@@ -97,6 +97,7 @@ public:
   bool        isSmoothingOn()const{return m_bSmoothingOn;}
   void        SmoothingOn(){m_bSmoothingOn = true;}
   void        SmoothingOff(){m_bSmoothingOn = false;}
+  int		  getColor() { return this->color; }
   void		  setColor(int color) { this->color = color; }
   void        ToggleSmoothing(){m_bSmoothingOn = !m_bSmoothingOn;}
   

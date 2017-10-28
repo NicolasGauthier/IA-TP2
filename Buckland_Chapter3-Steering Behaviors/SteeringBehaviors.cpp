@@ -1522,6 +1522,7 @@ Vector2D SteeringBehavior::RepulsePursuit()
 	}
 	Vector2D force;
 	if (m_pTargetAgent1 != NULL) {
+		m_pVehicle->setColor(m_pTargetAgent1->getColor());
 		force = Arrive(m_pTargetAgent1->Pos(), Deceleration(normal)) + Repulse(m_pTargetAgent1);
 		force.Truncate(m_pVehicle->MaxForce());
 	}
